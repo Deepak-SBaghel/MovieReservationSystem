@@ -1,4 +1,4 @@
-
+import client from '../utils/redisClient.js';
 import { create, findAll, findByPk } from '../models/movie.js';
 
 // Create a new movie (Admin only)
@@ -12,6 +12,14 @@ const createMovie = async (req, res) => {
       genre,
       posterImage,
     });
+    
+    // Update Redis cache 
+    const cachedMovies = await client.get('movies');
+    if (cachedMovies) {
+      const moviesArr = JSON.parse(cachedMovies);
+      moviesArr.push(movie);
+      await client.setEx('movies', 3600, JSON.stringify(moviesArr));
+    }
 
     res.status(201).json(movie);
   } catch (error) {
@@ -23,7 +31,14 @@ const createMovie = async (req, res) => {
 // Get all movies
 const getMovies = async (req, res) => {
   try {
+    const cachedMovies = await client.get('movies');
+    if (cachedMovies) {
+      return res.status(200).json(JSON.parse(cachedMovies));
+    }
     const movies = await findAll();
+
+    await client.setEx('movies', 3600, JSON.stringify(movies));
+
     res.status(200).json(movies);
   } catch (error) {
     console.log(error);
@@ -44,7 +59,14 @@ const updateMovie = async (req, res) => {
     }
 
     await movie.update({ title, description, genre, posterImage });
-
+    
+    // update the movie in cache 
+    const cachedMovies = await client.get('movies');
+    if (cachedMovies) {
+      let moviesArr = JSON.parse(cachedMovies);
+      moviesArr = moviesArr.map(m => (m.id === movie.id ? movie : m));
+      await client.setEx('movies', 3600, JSON.stringify(moviesArr));
+    }    
     res.status(200).json(movie);
   } catch (error) {
     console.log(error);
@@ -63,6 +85,15 @@ const deleteMovie = async (req, res) => {
     }
 
     await movie.destroy();
+
+    // delete movie in cache 
+    const cachedMovies = await client.get('movies');
+    if (cachedMovies) {
+      let moviesArr = JSON.parse(cachedMovies);
+      moviesArr = moviesArr.filter(m => m.id !== movie.id);
+      await client.setEx('movies', 3600, JSON.stringify(moviesArr));
+    }
+
     res.status(200).json({ message: 'Movie deleted' });
   } catch (error) {
     console.log(error);
