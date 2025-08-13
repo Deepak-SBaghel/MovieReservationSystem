@@ -4,6 +4,8 @@ import { authenticate, sync } from './models/index.js';
 import authRoutes from './routes/authRoutes.js';
 import movieRoutes from './routes/movieRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
+// esure redis is connected
+import './utils/redisClient.js';
 
 const PORT = process.env.PORT || 3000;
 
