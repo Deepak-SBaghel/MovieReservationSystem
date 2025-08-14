@@ -1,7 +1,7 @@
 
 import { DataTypes } from 'sequelize';
-import sequelize from './index';
-import Movie from './movie';
+import sequelize from './index.js';
+import Movie from './movie.js';
 
 const Showtime = sequelize.define(
   'Showtime',
@@ -30,4 +30,11 @@ Movie.hasMany(Showtime, { foreignKey: 'movieId', onDelete: 'CASCADE' });
 // optional : hasMany = Parent table knows it has many children. (Movie can list its Showtimes)
 // with this , I can query from the movie table to get the showTime's 
 // therefore its Important to set if Movie hasOne or hasMany ShowTime . 
+
+
+const create = (...args) => Showtime.create(...args);
+const findAll = (...args) => Showtime.findAll(...args);
+const findByPk = (...args) => Showtime.findByPk(...args);
+
+export {create ,findAll,findByPk};
 export default Showtime;

@@ -101,7 +101,7 @@ const deleteMovie = async (req, res) => {
   }
 };
 
-export default {
+export {
   createMovie,
   getMovies,
   updateMovie,

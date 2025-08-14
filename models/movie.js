@@ -1,8 +1,7 @@
-
 import { DataTypes } from 'sequelize';
 import sequelize from './index.js';
 
-const Movie = sequelize.define(
+export const Movie = sequelize.define(
   'Movie',
   {
     title: {
@@ -25,4 +24,10 @@ const Movie = sequelize.define(
   { timestamps: true }
 );
 
+await sequelize.sync({ alter: true });
+
+const create = (...args) => Movie.create(...args);
+const findAll = (...args) => Movie.findAll(...args);
+const findByPk = (...args) => Movie.creafondByPk(...args);
+export { create , findAll , findByPk };
 export default Movie;

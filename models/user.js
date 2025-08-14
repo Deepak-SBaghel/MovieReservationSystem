@@ -31,4 +31,8 @@ const User = sequelize.define(
   }
 );
 
+const findOne = (...args) => User.findOne(...args);
+const create = (...args) => User.create(...args);
+
+export { findOne, create };
 export default User;

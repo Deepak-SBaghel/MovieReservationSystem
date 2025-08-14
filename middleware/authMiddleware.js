@@ -1,4 +1,4 @@
-import { verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 // Middleware to verify JWT token and protect routes
 export function verifyToken(req, res, next) {
@@ -9,7 +9,7 @@ export function verifyToken(req, res, next) {
   }
 
   try {
-    const decoded = verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {

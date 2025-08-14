@@ -1,5 +1,5 @@
 import { hash, compare } from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { findOne, create } from '../models/user.js';
 
 // User registration
@@ -27,7 +27,7 @@ const register = async (req, res) => {
     });
 
     // Generate JWT token
-    const token = sign(
+    const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
@@ -59,7 +59,7 @@ const login = async (req, res) => {
     }
 
     // Generate JWT token
-    const token = sign(
+    const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
@@ -72,4 +72,4 @@ const login = async (req, res) => {
   }
 };
 
-export default { register, login };
+export  { register, login };

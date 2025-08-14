@@ -119,7 +119,7 @@ const cancelReservation = async (req, res) => {
   }
 };
 
-export default {
+export {
   createReservation,
   getUserReservations,
   getShowtimeReservations,
