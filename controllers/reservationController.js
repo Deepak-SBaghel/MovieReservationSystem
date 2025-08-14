@@ -3,44 +3,36 @@ import { sum, create, findAll, findOne } from '../models/reservation.js';
 import Showtime, { findByPk } from '../models/showtime.js';
 import User from '../models/user.js';
 
-// Create a reservation (Regular User)
 const createReservation = async (req, res) => {
-  const { showtimeId, seats } = req.body;
+  const { paymentIntentId } = req.body;
   const userId = req.user.id;
 
   try {
-    // Check if showtime exists
-    const showtime = await findByPk(showtimeId);
-
-    if (!showtime) {
-      return res.status(404).json({ message: 'Showtime not found' });
+    // payment part
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (paymentIntent.status !== 'succeeded') {
+      return res.status(400).json({ message: 'Payment not completed' });
     }
 
-    // Check if there are enough available seats
-    const totalReservedSeats = await sum('seats', {
-      where: { showtimeId },
-    });
+    const { showtimeId, seats } = JSON.parse(paymentIntent.metadata);
+
+    // chech if seat available . 
+    const showtime = await Showtime.findByPk(showtimeId);
+    const totalReservedSeats = await sum('seats', { where: { showtimeId } });
     const availableSeats = showtime.capacity - totalReservedSeats;
 
-    if (seats > availableSeats) {
-      return res.status(400).json({ message: 'Not enough available seats' });
-    }
+    if (seats > availableSeats) return res.status(400).json({ message: 'Not enough seats' });
 
-    // Create the reservation
-    const reservation = await create({
-      userId,
-      showtimeId,
-      seats,
-    });
+    const reservation = await create({ userId, showtimeId, seats });
 
     res.status(201).json(reservation);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Error creating reservation', error });
+    res.status(500).json({ message: 'Reservation failed', error });
   }
 };
 
-// Get all reservations for a user
+
 const getUserReservations = async (req, res) => {
   const userId = req.user.id;
   try {
@@ -56,7 +48,7 @@ const getUserReservations = async (req, res) => {
   }
 };
 
-// Get all reservations for a specific showtime (Admin only)
+// (Admin only)
 const getShowtimeReservations = async (req, res) => {
   const { showtimeId } = req.params;
 
@@ -85,13 +77,12 @@ const getShowtimeReservations = async (req, res) => {
   }
 };
 
-// Cancel a reservation (Regular User)
+// (Regular User)
 const cancelReservation = async (req, res) => {
   const { reservationId } = req.params;
   const userId = req.user.id;
 
   try {
-    // Find the reservation
     const reservation = await findOne({
       where: { id: reservationId, userId },
     });
@@ -99,8 +90,6 @@ const cancelReservation = async (req, res) => {
     if (!reservation) {
       return res.status(404).json({ message: 'Reservation not found.' });
     }
-
-    // Only allow cancellation for upcoming showtimes
     const showtime = await findByPk(reservation.showtimeId);
 
     if (new Date(showtime.date) <= new Date()) {
@@ -109,7 +98,6 @@ const cancelReservation = async (req, res) => {
         .json({ message: 'Cannot cancel past or ongoing reservations.' });
     }
 
-    // Delete the reservation
     await reservation.destroy();
 
     res.status(200).json({ message: 'Reservation cancelled' });
