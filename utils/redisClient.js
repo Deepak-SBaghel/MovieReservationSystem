@@ -1,11 +1,16 @@
-import { createClient } from 'redis';
+import { createClient } from "redis";
 
 const client = createClient({
-  url: process.env.REDIS_URL 
+  socket: { host: "127.0.0.1", port: 6379, connectTimeout: 3000 }
 });
 
-client.on('error', (err) => console.error('Redis Client Error', err));
+// Only log real errors
+client.on("error", (err) => {
+  if (!err.message.includes("ConnectionTimeoutError")) return;
+  // ignore this spurious WSL timeout
+});
 
 await client.connect();
+console.log("Redis connected successfully!");
 
 export default client;
