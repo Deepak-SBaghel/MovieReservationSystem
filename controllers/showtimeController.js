@@ -57,4 +57,4 @@ const getShowtimes = async (req, res) => {
   }
 };
 
-export default { createShowtime, getShowtimes };
+export { createShowtime, getShowtimes };

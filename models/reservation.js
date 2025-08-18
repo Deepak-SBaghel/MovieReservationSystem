@@ -1,10 +1,10 @@
-import { DataTypes } from 'sequelize';
-import sequelize from './index.js';
-import User, { hasMany } from './user.js';
-import Showtime, { hasMany as _hasMany } from './showtime,js';
+import { DataTypes } from "sequelize";
+import sequelize from "./index.js";
+import User from "./user.js";
+import Showtime from "./showtime.js";
 
 const Reservation = sequelize.define(
-  'Reservation',
+  "Reservation",
   {
     seats: {
       type: DataTypes.INTEGER,
@@ -15,13 +15,20 @@ const Reservation = sequelize.define(
 );
 
 // Define relationships: Reservation belongs to User and Showtime
-Reservation.belongsTo(User, { foreignKey: 'userId' });
-Reservation.belongsTo(Showtime, { foreignKey: 'showtimeId' });
+Reservation.belongsTo(User, { foreignKey: "userId" });
+Reservation.belongsTo(Showtime, { foreignKey: "showtimeId" });
 
 // User has many reservations
-hasMany(Reservation, { foreignKey: 'userId' });
+User.hasMany(Reservation, { foreignKey: "userId" });
 
 // Showtime has many reservations
-_hasMany(Reservation, { foreignKey: 'showtimeId' });
+Showtime.hasMany(Reservation, { foreignKey: "showtimeId" });
 
+const sum = (...args) => Reservation.sum(...args);
+const create = (...args) => Reservation.create(...args);
+const findAll = (...args) => Reservation.findAll(...args);
+const findOne = (...args) => Reservation.findOne(...args);
+const findByPk = (...args) => Reservation.creafondByPk(...args);
+
+export { sum, create, findAll, findOne, findByPk };
 export default Reservation;
