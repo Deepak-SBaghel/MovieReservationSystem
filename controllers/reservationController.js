@@ -2,31 +2,55 @@
 import { sum, create, findAll, findOne } from '../models/reservation.js';
 import Showtime, { findByPk } from '../models/showtime.js';
 import User from '../models/user.js';
+import sequelize from '../models/index.js';
 
 const createReservation = async (req, res) => {
   const { paymentIntentId } = req.body;
   const userId = req.user.id;
+  // Start trans
+  const transaction = await sequelize.transaction();
 
   try {
     // payment part
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    if (paymentIntent.status !== 'succeeded') {
-      return res.status(400).json({ message: 'Payment not completed' });
+    if (!paymentIntent || paymentIntent.status !== 'succeeded') {
+      await transaction.rollback();
+      return res.status(400).json({ message: 'Payment not completed yet' });
     }
 
     const { showtimeId, seats } = JSON.parse(paymentIntent.metadata);
 
     // chech if seat available . 
-    const showtime = await Showtime.findByPk(showtimeId);
-    const totalReservedSeats = await sum('seats', { where: { showtimeId } });
+    const showtime = await findByPk(showtimeId, {
+      lock: transaction.LOCK.UPDATE,
+      transaction
+    });
+
+    if (!showtime) {
+      await transaction.rollback();
+      return res.status(404).json({ message: 'Showtime not found' });
+    }
+
+    const totalReservedSeats = await sum('seats', {
+      where: { showtimeId },
+      transaction
+    });
     const availableSeats = showtime.capacity - totalReservedSeats;
 
-    if (seats > availableSeats) return res.status(400).json({ message: 'Not enough seats' });
+    if (seats >  availableSeats) {
+      await transaction.rollback();
+      return res.status(400).json({ message: 'Not enough seats' });
+    }
 
-    const reservation = await create({ userId, showtimeId, seats });
+    const reservation = await create(
+      { userId, showtimeId, seats },
+      { transaction }
+    );
+    await transaction.commit();
 
     res.status(201).json(reservation);
   } catch (error) {
+    await transaction.rollback();
     console.log(error);
     res.status(500).json({ message: 'Reservation failed', error });
   }
