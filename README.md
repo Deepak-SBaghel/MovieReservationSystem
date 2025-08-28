@@ -4,6 +4,8 @@ A backend movie ticket booking application built with **Node.js**, **Express**, 
 It includes **Stripe payment integration**, **Redis caching**, and **parallel booking prevention** to ensure that no two users can book the same seats at the same time.
 
 ---
+![1750928354566](https://github.com/user-attachments/assets/ed3e7c92-61df-4a76-bcab-32207008eb41)
+
 
 ## Features
 
